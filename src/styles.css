@@ -1,0 +1,359 @@
+import { useMemo, useState } from 'react';
+
+const initialStudent = {
+  name: 'Ariana Patel',
+  grade: '10th Grade',
+  advisor: 'Mrs. Carter',
+  homeroom: 'Room 214',
+  gpa: 3.86,
+  credits: 25.5,
+  nextMeeting: 'Thu, 2:15 PM',
+};
+
+const initialAssignments = [
+  { id: 1, title: 'Algebra Quiz Review', className: 'Algebra II', due: 'Today', status: 'In Progress', score: 94, complete: false },
+  { id: 2, title: 'Research Outline', className: 'English', due: 'Tomorrow', status: 'Needs Review', score: 88, complete: false },
+  { id: 3, title: 'Lab Report', className: 'Biology', due: 'Wed', status: 'Submitted', score: 96, complete: true },
+  { id: 4, title: 'World History Essay', className: 'History', due: 'Fri', status: 'Drafting', score: 91, complete: false },
+];
+
+const initialSchedule = [
+  { id: 1, time: '8:30 AM', course: 'Algebra II', room: '104', teacher: 'Mr. Santos' },
+  { id: 2, time: '9:45 AM', course: 'Biology', room: '214', teacher: 'Ms. Nguyen' },
+  { id: 3, time: '11:00 AM', course: 'English', room: '312', teacher: 'Mrs. Brooks' },
+  { id: 4, time: '1:15 PM', course: 'Counseling', room: '118', teacher: 'Mrs. Carter' },
+];
+
+const initialGrades = [
+  { subject: 'Algebra II', percentage: 94, trend: '+4%' },
+  { subject: 'Biology', percentage: 96, trend: '+2%' },
+  { subject: 'English', percentage: 88, trend: '+1%' },
+  { subject: 'History', percentage: 91, trend: '+3%' },
+  { subject: 'Spanish', percentage: 90, trend: '+2%' },
+];
+
+const initialAttendance = [
+  { subject: 'Algebra II', rate: '96%', },
+  { subject: 'Biology', rate: '98%' },
+  { subject: 'English', rate: '94%' },
+  { subject: 'History', rate: '100%' },
+];
+
+function App() {
+  const [student, setStudent] = useState(initialStudent);
+  const [assignments, setAssignments] = useState(initialAssignments);
+  const [schedule, setSchedule] = useState(initialSchedule);
+  const [grades, setGrades] = useState(initialGrades);
+  const [attendance, setAttendance] = useState(initialAttendance);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState(initialAssignments[0].id);
+
+  const averageGrade = useMemo(
+    () => Math.round(grades.reduce((sum, item) => sum + item.percentage, 0) / grades.length),
+    [grades]
+  );
+
+  const selectedAssignment =
+    assignments.find((assignment) => assignment.id === selectedAssignmentId) ?? assignments[0];
+
+  const updateStudentField = (field, value) => {
+    setStudent((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleAssignmentScoreChange = (id, value) => {
+    const safeValue = Math.max(0, Math.min(100, Number(value) || 0));
+    setAssignments((current) =>
+      current.map((assignment) =>
+        assignment.id === id ? { ...assignment, score: safeValue } : assignment
+      )
+    );
+
+    setGrades((current) =>
+      current.map((course) => {
+        if (course.subject === 'English' && id === 2) {
+          return { ...course, percentage: safeValue };
+        }
+        return course;
+      })
+    );
+  };
+
+  const handleToggleAssignment = (id) => {
+    setAssignments((current) =>
+      current.map((assignment) =>
+        assignment.id === id
+          ? { ...assignment, complete: !assignment.complete, status: !assignment.complete ? 'Submitted' : 'In Progress' }
+          : assignment
+      )
+    );
+  };
+
+  const handleScheduleUpdate = (id, field, value) => {
+    setSchedule((current) =>
+      current.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  };
+
+  return (
+    <div className="portal-shell">
+      <aside className="sidebar">
+        <div className="brand-block">
+          <div className="brand-mark">IC</div>
+          <div>
+            <p className="eyebrow">Student Portal</p>
+            <h2>Infinite Campus</h2>
+          </div>
+        </div>
+
+        <nav className="nav-menu">
+          <button className="nav-item active">Dashboard</button>
+          <button className="nav-item">Courses</button>
+          <button className="nav-item">Assignments</button>
+          <button className="nav-item">Attendance</button>
+          <button className="nav-item">Calendar</button>
+          <button className="nav-item">Grades</button>
+          <button className="nav-item">Profile</button>
+        </nav>
+
+        <div className="support-card">
+          <p className="eyebrow">Advisor</p>
+          <h3>{student.advisor}</h3>
+          <span>{student.homeroom}</span>
+          <button className="primary-button" onClick={() => setShowProfileEditor(true)}>
+            Edit profile
+          </button>
+        </div>
+      </aside>
+
+      <main className="content">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Welcome back</p>
+            <h1>{student.name}</h1>
+          </div>
+          <div className="topbar-actions">
+            <button className="action-button">Messages</button>
+            <button className="action-button">Resources</button>
+          </div>
+        </header>
+
+        <section className="overview-grid">
+          <div className="metric-card primary">
+            <span>Current GPA</span>
+            <strong>{student.gpa.toFixed(2)}</strong>
+            <small>Up from 3.78</small>
+          </div>
+          <div className="metric-card">
+            <span>Credits</span>
+            <strong>{student.credits}</strong>
+            <small>Semester total</small>
+          </div>
+          <div className="metric-card">
+            <span>Average</span>
+            <strong>{averageGrade}%</strong>
+            <small>Across all classes</small>
+          </div>
+          <div className="metric-card">
+            <span>Next Meeting</span>
+            <strong>{student.nextMeeting}</strong>
+            <small>Advisor check-in</small>
+          </div>
+        </section>
+
+        <section className="main-grid">
+          <div className="panel wide-panel">
+            <div className="panel-header">
+              <h3>Academic Snapshot</h3>
+              <button className="ghost-button">View report</button>
+            </div>
+
+            <div className="grade-list">
+              {grades.map((grade) => (
+                <div key={grade.subject} className="grade-row">
+                  <div className="grade-meta">
+                    <strong>{grade.subject}</strong>
+                    <span>{grade.trend}</span>
+                  </div>
+                  <div className="progress-track">
+                    <span style={{ width: `${grade.percentage}%` }} />
+                  </div>
+                  <b>{grade.percentage}%</b>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-header">
+              <h3>Attendance</h3>
+              <button className="ghost-button">Detailed</button>
+            </div>
+
+            <div className="mini-list">
+              {attendance.map((item) => (
+                <div key={item.subject} className="mini-row">
+                  <span>{item.subject}</span>
+                  <strong>{item.rate}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bottom-grid">
+          <div className="panel">
+            <div className="panel-header">
+              <h3>Assignments</h3>
+              <button className="ghost-button">All tasks</button>
+            </div>
+
+            <div className="assignment-list">
+              {assignments.map((assignment) => (
+                <button
+                  key={assignment.id}
+                  className={`assignment-row ${selectedAssignmentId === assignment.id ? 'selected' : ''}`}
+                  onClick={() => setSelectedAssignmentId(assignment.id)}
+                >
+                  <div>
+                    <h4>{assignment.title}</h4>
+                    <small>{assignment.className}</small>
+                  </div>
+                  <div>
+                    <span className="badge">{assignment.status}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-header">
+              <h3>Schedule</h3>
+              <button className="ghost-button">Today</button>
+            </div>
+
+            <div className="schedule-list">
+              {schedule.map((item) => (
+                <div key={item.id} className="schedule-row">
+                  <div className="time-pill">{item.time}</div>
+                  <div>
+                    <h4>{item.course}</h4>
+                    <small>{item.room}</small>
+                  </div>
+                  <span>{item.teacher}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {showProfileEditor && (
+        <div className="modal-backdrop" onClick={() => setShowProfileEditor(false)}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+            <div className="panel-header">
+              <h3>Edit Student Profile</h3>
+              <button className="ghost-button" onClick={() => setShowProfileEditor(false)}>Close</button>
+            </div>
+
+            <div className="form-grid">
+              <label>
+                Student Name
+                <input value={student.name} onChange={(e) => updateStudentField('name', e.target.value)} />
+              </label>
+              <label>
+                Grade Level
+                <input value={student.grade} onChange={(e) => updateStudentField('grade', e.target.value)} />
+              </label>
+              <label>
+                Advisor
+                <input value={student.advisor} onChange={(e) => updateStudentField('advisor', e.target.value)} />
+              </label>
+              <label>
+                Homeroom
+                <input value={student.homeroom} onChange={(e) => updateStudentField('homeroom', e.target.value)} />
+              </label>
+              <label>
+                GPA
+                <input type="number" step="0.01" value={student.gpa} onChange={(e) => updateStudentField('gpa', Number(e.target.value) || 0)} />
+              </label>
+              <label>
+                Credits
+                <input type="number" step="0.5" value={student.credits} onChange={(e) => updateStudentField('credits', Number(e.target.value) || 0)} />
+              </label>
+            </div>
+
+            <div className="panel-header editor-footer">
+              <h3>Assignment Details</h3>
+            </div>
+
+            {selectedAssignment && (
+              <div className="form-grid assignment-editor">
+                <label>
+                  Assignment Title
+                  <input
+                    value={selectedAssignment.title}
+                    onChange={(e) =>
+                      setAssignments((current) =>
+                        current.map((assignment) =>
+                          assignment.id === selectedAssignment.id
+                            ? { ...assignment, title: e.target.value }
+                            : assignment
+                        )
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  Class
+                  <input
+                    value={selectedAssignment.className}
+                    onChange={(e) =>
+                      setAssignments((current) =>
+                        current.map((assignment) =>
+                          assignment.id === selectedAssignment.id
+                            ? { ...assignment, className: e.target.value }
+                            : assignment
+                        )
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  Due Date
+                  <input
+                    value={selectedAssignment.due}
+                    onChange={(e) =>
+                      setAssignments((current) =>
+                        current.map((assignment) =>
+                          assignment.id === selectedAssignment.id
+                            ? { ...assignment, due: e.target.value }
+                            : assignment
+                        )
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  Score
+                  <input
+                    type="number"
+                    value={selectedAssignment.score}
+                    onChange={(e) => handleAssignmentScoreChange(selectedAssignment.id, e.target.value)}
+                  />
+                </label>
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button className="primary-button" onClick={() => setShowProfileEditor(false)}>Save Changes</button>
+              <button className="action-button" onClick={() => setShowProfileEditor(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
